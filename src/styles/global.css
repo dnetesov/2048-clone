@@ -46,10 +46,12 @@ body {
   background: radial-gradient(100% 280.37% at 0% 0%, var(--color-page-from) 0%, var(--color-page-to) 100%);
   color: var(--color-accent);
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 .app {
   min-height: 100vh;
+  min-height: 100svh;
   display: flex;
   align-items: stretch;
   justify-content: center;
@@ -63,6 +65,7 @@ body {
   width: 100%;
   max-width: 1440px;
   min-height: calc(100vh - 80px);
+  min-height: calc(100svh - 80px);
 }
 
 .game__board-area {
@@ -506,4 +509,144 @@ body {
   font-weight: 700;
   font-size: 13px;
   color: var(--color-label);
+}
+
+/* ===========================================================================
+   Responsive layout
+   =========================================================================== */
+@media (max-width: 640px) {
+  :root {
+    --cell-size: 84px;
+    --board-size: 356px;
+  }
+
+  .app {
+    padding: 20px 16px 12px;
+  }
+
+  .game {
+    min-height: calc(100vh - 32px);
+    min-height: calc(100svh - 32px);
+  }
+
+  .header {
+    width: var(--board-size);
+    max-width: 100%;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "logo action"
+      "scores scores";
+    row-gap: 12px;
+    column-gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .logo {
+    grid-area: logo;
+    align-self: center;
+  }
+
+  .header__scores {
+    grid-area: scores;
+    justify-content: center;
+    margin-top: 40px;
+  }
+
+  .header > .button {
+    grid-area: action;
+    justify-self: end;
+    min-width: 104px;
+    height: 42px;
+    padding-inline: 14px;
+  }
+
+  .tile {
+    font-size: 36px;
+  }
+
+  .tile--128,
+  .tile--256,
+  .tile--512 {
+    font-size: 31px;
+  }
+
+  .tile--1024,
+  .tile--2048 {
+    font-size: 27px;
+  }
+
+  .game__controls {
+    margin-top: 24px;
+  }
+}
+
+@media (max-width: 380px) {
+  :root {
+    --cell-size: 76px;
+    --board-size: 324px;
+  }
+
+  .app {
+    padding-inline: 12px;
+  }
+
+  .score-card {
+    width: 92px;
+    height: 66px;
+    padding: 12px 18px;
+  }
+
+  .score-card__label {
+    font-size: 12px;
+  }
+
+  .score-card__value {
+    font-size: 20px;
+  }
+
+  .undo-button {
+    width: 88px;
+    height: 80px;
+  }
+
+  .undo-button__inner {
+    width: 64px;
+    height: 56px;
+  }
+}
+
+@media (max-width: 340px) {
+  :root {
+    --cell-size: 70px;
+    --board-size: 300px;
+  }
+
+  .app {
+    padding-inline: 10px;
+  }
+
+  .header {
+    column-gap: 10px;
+  }
+
+  .header > .button {
+    min-width: 96px;
+    padding-inline: 12px;
+  }
+
+  .tile {
+    font-size: 31px;
+  }
+
+  .tile--128,
+  .tile--256,
+  .tile--512 {
+    font-size: 27px;
+  }
+
+  .tile--1024,
+  .tile--2048 {
+    font-size: 23px;
+  }
 }
