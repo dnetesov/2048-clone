@@ -27,6 +27,14 @@ To create a production build:
 pnpm run build
 pnpm run preview
 ```
+## Key assumptions
+
+- For the game start I assumed standard 2048 behavior: a new game starts with two random tiles
+- For Win and Game Over states I chose a modal-like overlay with a simple message
+- I read about different implementations of 2048 and decided that player can continue after the "Win" screen appeared
+- Win overlay includes "Continue" button while "Game Over" overlay includes the undo button
+- Undo does not affect the persisted best score
+- Animations are css-only
 
 ## Architecture
 
@@ -181,4 +189,5 @@ deterministic in tests by mocking `Math.random` per case.
 
 ## Known limitations
 
-- At the moment of writing the game does not render cortrectly on mobile devices
+- CSS variables are storing all the colors directly, probably could use some kind of pattern (lighten/darken)
+- Responsive layout is a little clunky (score cards) but fully functional
