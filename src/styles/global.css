@@ -1,0 +1,509 @@
+/* ===========================================================================
+   Design tokens
+   =========================================================================== */
+:root {
+  --font-family: Manrope, system-ui, sans-serif;
+
+  --color-page-from: #f6e4d0;
+  --color-page-to: #f4e2cc;
+  --color-board: #ebd8bc;
+  --color-empty-cell: #f5e3cf;
+  --color-surface: #f5e3cf;
+
+  --color-button: #fbefdf;
+
+  --color-accent: #795f3b;
+  --color-accent-hover: #a38b67;
+  --color-label: #a38b67;
+
+  /* Board geometry (mirrors src/game/constants.ts). */
+  --cell-size: 110px;
+  --cell-gap: 4px;
+  --board-padding: 4px;
+  --board-size: 460px;
+  --board-radius: 16px;
+  --tile-radius: 12px;
+
+  --transition-move: 120ms ease-in-out;
+}
+
+/* ===========================================================================
+   Base / reset
+   =========================================================================== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-family);
+  background: radial-gradient(100% 280.37% at 0% 0%, var(--color-page-from) 0%, var(--color-page-to) 100%);
+  color: var(--color-accent);
+  -webkit-font-smoothing: antialiased;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  padding: 40px 32px;
+}
+
+.game {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 1440px;
+  min-height: calc(100vh - 80px);
+}
+
+.game__board-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: var(--board-size);
+  max-width: 100%;
+}
+
+/* ===========================================================================
+   Header
+   =========================================================================== */
+.header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.logo {
+  display: block;
+  width: 100px;
+  height: 44px;
+  flex-shrink: 0;
+}
+
+.header__scores {
+  display: flex;
+  gap: 12px;
+}
+
+/* ===========================================================================
+   Score cards
+   =========================================================================== */
+.score-card {
+  width: 97px;
+  height: 72px;
+  border-radius: var(--tile-radius);
+  padding: 16px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface);
+  box-shadow:
+    -1px -1px 1px 0 #e5cfb3 inset,
+    1px 1px 1px 0 #ffffff33 inset;
+}
+
+.score-card--dark {
+  background-color: var(--color-board);
+}
+
+.score-card__label {
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 16px;
+  letter-spacing: 0.02em;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--color-label);
+}
+
+.score-card__value {
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--color-accent);
+}
+
+/* ===========================================================================
+   Buttons
+   =========================================================================== */
+.button {
+  min-width: 106px;
+  height: 44px;
+  border-radius: var(--tile-radius);
+  padding: 10px 16px;
+  background: var(--color-accent);
+  color: #ffffff;
+  border: none;
+  font-family: var(--font-family);
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 120ms ease;
+}
+
+.button:hover {
+  background: var(--color-accent-hover);
+}
+
+.button:active {
+  background:
+    linear-gradient(0deg, #a38b67, #a38b67),
+    linear-gradient(0deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.12));
+}
+
+.button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ===========================================================================
+   Board
+   =========================================================================== */
+.board {
+  position: relative;
+  width: var(--board-size);
+  height: var(--board-size);
+  border-radius: var(--board-radius);
+  padding: var(--board-padding);
+  background: var(--color-board);
+  box-shadow:
+    -1px -1px 1px 0 #e5cfb3 inset,
+    1px 1px 1px 0 #ffffff33 inset;
+  touch-action: none;
+}
+
+/* Static empty cells use CSS Grid (allowed: only moving tiles must avoid it). */
+.grid-background {
+  position: relative;
+  z-index: 0;
+  display: grid;
+  grid-template-columns: repeat(4, var(--cell-size));
+  grid-template-rows: repeat(4, var(--cell-size));
+  gap: var(--cell-gap);
+}
+
+.grid-cell {
+  width: var(--cell-size);
+  height: var(--cell-size);
+  border-radius: var(--tile-radius);
+  background: var(--color-empty-cell);
+  box-shadow:
+    -1px -1px 1px 0 #e5cfb3 inset,
+    1px 1px 1px 0 #ffffff33 inset;
+}
+
+/* ===========================================================================
+   Tile layer (absolutely positioned over the static grid)
+   =========================================================================== */
+.tile-shadow-layer,
+.tile-layer {
+  position: absolute;
+  inset: 0;
+  /* Padding keeps translate(0,0) aligned with the first grid cell. */
+  padding: var(--board-padding);
+  pointer-events: none;
+}
+
+.tile-shadow-layer {
+  z-index: 1;
+}
+
+.tile-layer {
+  z-index: 2;
+}
+
+.tile-shadow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--cell-size);
+  height: var(--cell-size);
+  border-radius: var(--tile-radius);
+  transition: transform var(--transition-move);
+}
+
+.tile-shadow::before {
+  content: "";
+  position: absolute;
+  inset: 12px -2px -12px 10px;
+  border-radius: inherit;
+  background: #433320;
+  opacity: 0.32;
+  filter: blur(8px);
+  transform: translate(3px, 4px);
+}
+
+.tile {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--cell-size);
+  height: var(--cell-size);
+  border-radius: var(--tile-radius);
+  font-family: var(--font-family);
+  font-weight: 800;
+  font-size: 45px;
+  line-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    -4px -4px 2px 0 #00000014 inset,
+    4px 4px 1px 0 #ffffff33 inset;
+  /* Animate sliding between cells. */
+  transition: transform var(--transition-move);
+}
+
+.tile__value {
+  position: relative;
+  z-index: 1;
+}
+
+/* ===========================================================================
+   Tile colors
+   =========================================================================== */
+.tile--2 {
+  background: linear-gradient(135deg, #ffcdab 0%, #fcc7a2 100%);
+  color: #96694b;
+}
+.tile--4 {
+  background: linear-gradient(135deg, #fcdd9d 0%, #f6d593 100%);
+  color: #906f2b;
+}
+.tile--8 {
+  background: linear-gradient(135deg, #c0d2c6 0%, #bed1c5 100%);
+  color: #668270;
+}
+.tile--16 {
+  background: linear-gradient(135deg, #c7caaf 0%, #c5c4a8 100%);
+  color: #777755;
+}
+.tile--32 {
+  background: linear-gradient(135deg, #c5d4ee 0%, #b5c7e5 100%);
+  color: #697a97;
+}
+.tile--64 {
+  background: linear-gradient(135deg, #c5c1e7 0%, #b2b3e0 100%);
+  color: #6d6b93;
+}
+.tile--128 {
+  background: linear-gradient(135deg, #c4abff 0%, #e8a2fc 100%);
+  color: #8665a3;
+  font-size: 38px;
+}
+.tile--256 {
+  background: linear-gradient(135deg, #e69ff1 0%, #ec97db 100%);
+  color: #a05da1;
+  font-size: 38px;
+}
+.tile--512 {
+  background: linear-gradient(135deg, #e995d8 0%, #e497d5 100%);
+  color: #8e5081;
+  font-size: 38px;
+}
+.tile--1024 {
+  background: linear-gradient(135deg, #f8a8a9 0%, #f79ea0 100%);
+  color: #a75253;
+  font-size: 32px;
+}
+.tile--2048 {
+  background: linear-gradient(135deg, #795f3b 0%, #6b5432 100%);
+  color: #ffffff;
+  font-size: 32px;
+}
+
+/* ===========================================================================
+   Tile animations
+   =========================================================================== */
+@keyframes tile-spawn {
+  0% {
+    transform: scale(0);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes tile-pop {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/*
+ * Spawn/merge animations run on an inner element so they do not fight with the
+ * translate transform that positions the tile. We animate the inner value via
+ * scale to keep the slide transition on the outer .tile intact.
+ */
+.tile--new .tile__value {
+  animation: tile-spawn 140ms ease;
+}
+
+.tile--merged .tile__value {
+  animation: tile-pop 160ms ease;
+}
+
+/* ===========================================================================
+   Overlays
+   =========================================================================== */
+.overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--board-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(246, 228, 208, 0.7);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: overlay-fade 200ms ease;
+  z-index: 3;
+}
+
+@keyframes overlay-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.overlay__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  padding: 24px;
+}
+
+.overlay__title {
+  font-weight: 800;
+  font-size: 40px;
+  color: var(--color-accent);
+}
+
+.overlay__text {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--color-label);
+}
+
+.overlay__actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+/* ===========================================================================
+   Controls / footer
+   =========================================================================== */
+.game__controls {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 40px;
+}
+
+.undo-button {
+  position: relative;
+  width: 96px;
+  height: 88px;
+  min-width: 0;
+  padding: 12px;
+  border-radius: 20px;
+  background-color: var(--color-board);
+  color: var(--color-label);
+  overflow: visible;
+  transition: transform 120ms ease;
+}
+
+.undo-button::before {
+  content: "";
+  position: absolute;
+  right: 4px;
+  bottom: 3px;
+  width: 79px;
+  height: 71px;
+  border-radius: var(--tile-radius);
+  background: linear-gradient(134.07deg, #a15a1b 41.37%, #956940 93.46%);
+  opacity: 0.2;
+  filter: blur(15px);
+}
+
+.undo-button:hover,
+.undo-button:active {
+  background-color: var(--color-board);
+}
+
+.undo-button:hover {
+  transform: translateY(-1px);
+}
+
+.undo-button:active {
+  transform: translateY(1px);
+}
+
+.undo-button:disabled:hover,
+.undo-button:disabled:active {
+  transform: none;
+}
+
+.undo-button__inner {
+  position: relative;
+  z-index: 1;
+  width: 72px;
+  height: 64px;
+  border-radius: 12px;
+  background: var(--color-button);
+  box-shadow:
+    -1px -1px 1px 0 #e5cfb3 inset,
+    1px 1px 1px 0 #ffffff33 inset,
+    0 2px 3px 0 #43332024;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.undo-button__icon {
+  width: 26px;
+  height: 22px;
+  flex-shrink: 0;
+  color: var(--color-label);
+}
+
+.undo-button__icon path {
+  stroke: currentColor;
+}
+
+.footer {
+  padding-bottom: 8px;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--color-label);
+}
