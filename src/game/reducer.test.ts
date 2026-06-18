@@ -151,4 +151,34 @@ describe("gameReducer", () => {
     expect(initial.history).toEqual([])
     expect(initial.isGameOver).toBe(false)
   })
+
+  it("cheat showcase displays every styled tile value without showing the win overlay", () => {
+    const current = state({ bestScore: 4096, score: 256 })
+
+    const showcase = gameReducer(current, { type: "CHEAT_SHOWCASE" })
+
+    expect(showcase.tiles.map((showcaseTile) => showcaseTile.value)).toEqual([
+      2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048,
+    ])
+    expect(showcase.bestScore).toBe(4096)
+    expect(showcase.score).toBe(0)
+    expect(showcase.hasWon).toBe(true)
+    expect(showcase.hasSeenWinOverlay).toBe(false)
+    expect(showcase.history).toEqual([])
+  })
+
+  it("cheat ready-to-win leaves two adjacent 1024 tiles for the next move", () => {
+    const current = state({ bestScore: 4096, hasWon: true })
+
+    const ready = gameReducer(current, { type: "CHEAT_READY_TO_WIN" })
+
+    expect(ready.tiles).toEqual([
+      tile("cheat-win-left", 1024, 0, 0),
+      tile("cheat-win-right", 1024, 0, 1),
+    ])
+    expect(ready.bestScore).toBe(4096)
+    expect(ready.hasWon).toBe(false)
+    expect(ready.hasSeenWinOverlay).toBe(false)
+    expect(ready.history).toEqual([])
+  })
 })

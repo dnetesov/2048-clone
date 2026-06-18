@@ -54,6 +54,7 @@ src/
     storage.ts          Best-score persistence (localStorage)
 
   hooks/
+    useCheatCodes.ts        Hidden QA keyboard shortcuts
     useKeyboardControls.ts   Arrow keys, move actions
     useSwipeControls.ts      Touch swipes, move actions
 
@@ -186,6 +187,27 @@ pnpm test
 The current tests focus on reducer-level behavior because the reducer is where
 the important gameplay state transitions happen. Random tile spawning is made
 deterministic in tests by mocking `Math.random` per case.
+
+## Hidden QA cheat codes
+
+The app includes two hidden keyboard cheat codes for manual testing:
+
+How to use:
+In local dev, just type:
+- `showtiles` displays every styled tile value from 2 through 2048.
+- `win2048` clears the board and leaves two adjacent 1024 tiles, so the next
+  left move wins.
+
+In deployed builds: open the app with ?cheats=1, then type the code
+
+They are intentionally not exposed in the UI. Cheat codes are enabled in local
+development automatically. In a deployed build, open the app with `?cheats=1`
+in the URL to enable them for that session.
+
+The reducer owns the actual state transitions (`CHEAT_SHOWCASE` and
+`CHEAT_READY_TO_WIN`). `useCheatCodes.ts` only listens for hidden keyboard
+sequences and dispatches those actions when cheats are enabled. This keeps
+test-only behavior explicit, easy to remove, and isolated from the regular UI.
 
 ## Known limitations
 

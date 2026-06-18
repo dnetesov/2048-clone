@@ -2,6 +2,7 @@ import { useCallback, useReducer } from "react";
 import UndoIcon from "../../public/icon-undo.svg?react";
 import { createInitialState, gameReducer } from "../game/reducer";
 import type { Direction } from "../game/types";
+import { useCheatCodes } from "../hooks/useCheatCodes";
 import { useKeyboardControls } from "../hooks/useKeyboardControls";
 import { Header } from "./Header";
 import { Board } from "./Board";
@@ -26,6 +27,7 @@ export function Game() {
   );
 
   useKeyboardControls(handleMove);
+  useCheatCodes(dispatch);
 
   const canUndo = state.history.length > 0;
 

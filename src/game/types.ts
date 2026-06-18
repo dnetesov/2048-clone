@@ -34,3 +34,5 @@ export type GameAction =
   | { type: "MOVE"; direction: Direction }
   | { type: "UNDO" }
   | { type: "CONTINUE_AFTER_WIN" }
+  | { type: "CHEAT_SHOWCASE" }
+  | { type: "CHEAT_READY_TO_WIN" }

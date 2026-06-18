@@ -8,6 +8,8 @@ import {
 import { loadBestScore, saveBestScore } from "./storage"
 import type { GameAction, GameSnapshot, GameState } from "./types"
 
+const SHOWCASE_VALUES = [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048]
+
 export function createInitialState(): GameState {
   return {
     tiles: createInitialTiles(),
@@ -28,6 +30,15 @@ function snapshot(state: GameState): GameSnapshot {
     hasSeenWinOverlay: state.hasSeenWinOverlay,
     isGameOver: state.isGameOver,
   }
+}
+
+function createShowcaseTiles() {
+  return SHOWCASE_VALUES.map((value, index) => ({
+    id: `cheat-showcase-${value}`,
+    value,
+    row: Math.floor(index / 4),
+    col: index % 4,
+  }))
 }
 
 export function gameReducer(state: GameState, action: GameAction): GameState {
@@ -87,6 +98,33 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     case "CONTINUE_AFTER_WIN": {
       return { ...state, hasSeenWinOverlay: false }
+    }
+
+    case "CHEAT_SHOWCASE": {
+      return {
+        tiles: createShowcaseTiles(),
+        score: 0,
+        bestScore: state.bestScore,
+        hasWon: true,
+        hasSeenWinOverlay: false,
+        isGameOver: false,
+        history: [],
+      }
+    }
+
+    case "CHEAT_READY_TO_WIN": {
+      return {
+        tiles: [
+          { id: "cheat-win-left", value: 1024, row: 0, col: 0 },
+          { id: "cheat-win-right", value: 1024, row: 0, col: 1 },
+        ],
+        score: 0,
+        bestScore: state.bestScore,
+        hasWon: false,
+        hasSeenWinOverlay: false,
+        isGameOver: false,
+        history: [],
+      }
     }
 
     default:
