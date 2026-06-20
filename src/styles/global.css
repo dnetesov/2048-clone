@@ -115,9 +115,7 @@ body {
   align-items: center;
   justify-content: center;
   background: var(--color-surface);
-  box-shadow:
-    -1px -1px 1px 0 #e5cfb3 inset,
-    1px 1px 1px 0 #ffffff33 inset;
+  border: 1px solid var(--color-board);
 }
 
 .score-card--dark {
@@ -449,14 +447,16 @@ body {
 .undo-button::before {
   content: "";
   position: absolute;
-  right: 4px;
-  bottom: 3px;
-  width: 79px;
-  height: 71px;
+  top: 24px;
+  left: 22px;
+  width: 72px;
+  height: 64px;
   border-radius: var(--tile-radius);
-  background: linear-gradient(134.07deg, #a15a1b 41.37%, #956940 93.46%);
-  opacity: 0.2;
-  filter: blur(15px);
+  background: #433320;
+  opacity: 0.32;
+  filter: blur(8px);
+  transform: translate(3px, 4px);
+  pointer-events: none;
 }
 
 .undo-button:hover,
@@ -487,7 +487,7 @@ body {
   box-shadow:
     -1px -1px 1px 0 #e5cfb3 inset,
     1px 1px 1px 0 #ffffff33 inset,
-    0 2px 3px 0 #43332024;
+    0 2px 3px 0 #00000024;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -611,6 +611,11 @@ body {
   }
 
   .undo-button__inner {
+    width: 64px;
+    height: 56px;
+  }
+
+  .undo-button::before {
     width: 64px;
     height: 56px;
   }
