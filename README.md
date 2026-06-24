@@ -212,4 +212,6 @@ test-only behavior explicit, easy to remove, and isolated from the regular UI.
 ## Known limitations
 
 - CSS variables are storing all the colors directly, probably could use some kind of pattern (lighten/darken)
+- CSS in general isn't atomic, although there are some design tokens and styles are partially reused. The next step is 
+  to build something closer tot he design system if we are talking about the real product.
 - Responsive layout is a little clunky (score cards) but fully functional
