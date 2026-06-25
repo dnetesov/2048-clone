@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
+import { BEST_SCORE_STORAGE_KEY, GAME_STATE_STORAGE_KEY } from "./constants"
 import { createInitialState, gameReducer } from "./reducer"
+import { saveGameState } from "./storage"
 import type { GameState, Tile } from "./types"
 
 function tile(id: string, value: number, row: number, col: number): Tile {
@@ -26,6 +28,7 @@ function mockRandomSequence(values: number[]): void {
 
 afterEach(() => {
   vi.restoreAllMocks()
+  vi.unstubAllGlobals()
 })
 
 describe("gameReducer", () => {
@@ -150,6 +153,84 @@ describe("gameReducer", () => {
     expect(initial.score).toBe(0)
     expect(initial.history).toEqual([])
     expect(initial.isGameOver).toBe(false)
+  })
+
+  it("restores a persisted game state on startup", () => {
+    const saved = state({
+      tiles: [tile("t20", 128, 1, 2)],
+      score: 512,
+      bestScore: 1024,
+      hasWon: true,
+      history: [
+        {
+          tiles: [tile("t19", 64, 1, 2)],
+          score: 256,
+          hasWon: false,
+          hasSeenWinOverlay: false,
+          isGameOver: false,
+        },
+      ],
+    })
+
+    const storage = new Map<string, string>([
+      [GAME_STATE_STORAGE_KEY, JSON.stringify({ ...saved, bestScore: undefined })],
+    ])
+    vi.stubGlobal("localStorage", {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: (key: string, value: string) => storage.set(key, value),
+    })
+
+    const restored = createInitialState()
+
+    expect(restored.tiles).toEqual(saved.tiles)
+    expect(restored.score).toBe(512)
+    expect(restored.bestScore).toBe(512)
+    expect(restored.hasWon).toBe(true)
+    expect(restored.history).toEqual(saved.history)
+    expect(storage.get(BEST_SCORE_STORAGE_KEY)).toBe("512")
+  })
+
+  it("ignores invalid persisted game state and starts a fresh game", () => {
+    mockRandomSequence([0, 0, 0, 0])
+
+    vi.stubGlobal("localStorage", {
+      getItem: (key: string) => (key === GAME_STATE_STORAGE_KEY ? "{bad json" : null),
+      setItem: vi.fn(),
+    })
+
+    const initial = createInitialState()
+
+    expect(initial.tiles).toHaveLength(2)
+    expect(initial.score).toBe(0)
+    expect(initial.history).toEqual([])
+  })
+
+  it("persists state without transient animation flags", () => {
+    const storage = new Map<string, string>()
+    vi.stubGlobal("localStorage", {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: (key: string, value: string) => storage.set(key, value),
+    })
+
+    saveGameState(
+      state({
+        tiles: [{ ...tile("t1", 2, 0, 0), isNew: true, hasMerged: true }],
+        history: [
+          {
+            tiles: [{ ...tile("t2", 4, 0, 1), isNew: true }],
+            score: 4,
+            hasWon: false,
+            hasSeenWinOverlay: false,
+            isGameOver: false,
+          },
+        ],
+      }),
+    )
+
+    const saved = JSON.parse(storage.get(GAME_STATE_STORAGE_KEY) ?? "{}")
+
+    expect(saved.tiles).toEqual([{ id: "t1", value: 2, row: 0, col: 0 }])
+    expect(saved.history[0].tiles).toEqual([{ id: "t2", value: 4, row: 0, col: 1 }])
   })
 
   it("cheat showcase displays every styled tile value without showing the win overlay", () => {

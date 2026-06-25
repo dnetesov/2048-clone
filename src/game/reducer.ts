@@ -4,17 +4,33 @@ import {
   isBoardStuck,
   move,
   spawnRandomTile,
+  syncTileIdCounter,
 } from "./logic"
-import { loadBestScore, saveBestScore } from "./storage"
+import { loadBestScore, loadGameState, saveBestScore, saveGameState } from "./storage"
 import type { GameAction, GameSnapshot, GameState } from "./types"
 
 const SHOWCASE_VALUES = [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048]
 
 export function createInitialState(): GameState {
+  const bestScore = loadBestScore()
+  const savedState = loadGameState()
+
+  if (savedState) {
+    syncTileIdCounter(savedState.tiles)
+
+    const restoredBestScore = Math.max(bestScore, savedState.score)
+    if (restoredBestScore !== bestScore) saveBestScore(restoredBestScore)
+
+    return {
+      ...savedState,
+      bestScore: restoredBestScore,
+    }
+  }
+
   return {
     tiles: createInitialTiles(),
     score: 0,
-    bestScore: loadBestScore(),
+    bestScore,
     hasWon: false,
     hasSeenWinOverlay: false,
     isGameOver: false,
@@ -41,10 +57,15 @@ function createShowcaseTiles() {
   }))
 }
 
+function persist(nextState: GameState): GameState {
+  saveGameState(nextState)
+  return nextState
+}
+
 export function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case "NEW_GAME": {
-      return {
+      return persist({
         tiles: createInitialTiles(),
         score: 0,
         bestScore: state.bestScore,
@@ -52,7 +73,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         hasSeenWinOverlay: false,
         isGameOver: false,
         history: [],
-      }
+      })
     }
 
     case "MOVE": {
@@ -73,7 +94,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
       const justWon = !state.hasWon && hasReachedWinningTile(tilesWithSpawn)
 
-      return {
+      return persist({
         tiles: tilesWithSpawn,
         score: newScore,
         bestScore: newBestScore,
@@ -81,7 +102,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         hasSeenWinOverlay: state.hasSeenWinOverlay || justWon,
         isGameOver: isBoardStuck(tilesWithSpawn),
         history: [...state.history, historyEntry],
-      }
+      })
     }
 
     case "UNDO": {
@@ -89,19 +110,19 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
       const previous = state.history[state.history.length - 1]
 
-      return {
+      return persist({
         ...previous,
         bestScore: state.bestScore,
         history: state.history.slice(0, -1),
-      }
+      })
     }
 
     case "CONTINUE_AFTER_WIN": {
-      return { ...state, hasSeenWinOverlay: false }
+      return persist({ ...state, hasSeenWinOverlay: false })
     }
 
     case "CHEAT_SHOWCASE": {
-      return {
+      return persist({
         tiles: createShowcaseTiles(),
         score: 0,
         bestScore: state.bestScore,
@@ -109,11 +130,11 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         hasSeenWinOverlay: false,
         isGameOver: false,
         history: [],
-      }
+      })
     }
 
     case "CHEAT_READY_TO_WIN": {
-      return {
+      return persist({
         tiles: [
           { id: "cheat-win-left", value: 1024, row: 0, col: 0 },
           { id: "cheat-win-right", value: 1024, row: 0, col: 1 },
@@ -124,7 +145,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         hasSeenWinOverlay: false,
         isGameOver: false,
         history: [],
-      }
+      })
     }
 
     default:

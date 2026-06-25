@@ -9,6 +9,18 @@ function createTileId(): string {
   return `t${tileIdCounter}`
 }
 
+/** Keeps generated ids ahead of restored persisted tiles after a page reload. */
+export function syncTileIdCounter(tiles: Tile[]): void {
+  const maxPersistedId = tiles.reduce((max, tile) => {
+    const match = /^t(\d+)$/.exec(tile.id)
+    if (!match) return max
+
+    return Math.max(max, Number.parseInt(match[1], 10))
+  }, 0)
+
+  tileIdCounter = Math.max(tileIdCounter, maxPersistedId)
+}
+
 /** Returns every grid coordinate that is not currently occupied by a tile. */
 function getEmptyCells(tiles: Tile[]): Array<{ row: number; col: number }> {
   const occupied = new Set(tiles.map((tile) => `${tile.row},${tile.col}`))
