@@ -7,6 +7,7 @@ import {
   syncTileIdCounter,
 } from "./logic"
 import { loadBestScore, loadGameState, saveBestScore, saveGameState } from "./storage"
+import { MAX_HISTORY_LENGTH } from "./constants"
 import type { GameAction, GameSnapshot, GameState } from "./types"
 
 const SHOWCASE_VALUES = [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048]
@@ -16,7 +17,10 @@ export function createInitialState(): GameState {
   const savedState = loadGameState()
 
   if (savedState) {
-    syncTileIdCounter(savedState.tiles)
+    const allTiles = savedState.tiles.concat(
+      savedState.history.flatMap((snapshot) => snapshot.tiles),
+    )
+    syncTileIdCounter(allTiles)
 
     const restoredBestScore = Math.max(bestScore, savedState.score)
     if (restoredBestScore !== bestScore) saveBestScore(restoredBestScore)
@@ -101,7 +105,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         hasWon: state.hasWon || justWon,
         hasSeenWinOverlay: state.hasSeenWinOverlay || justWon,
         isGameOver: isBoardStuck(tilesWithSpawn),
-        history: [...state.history, historyEntry],
+        history: [...state.history, historyEntry].slice(-MAX_HISTORY_LENGTH),
       })
     }
 

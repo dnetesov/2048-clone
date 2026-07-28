@@ -17,8 +17,8 @@ export function loadBestScore(): number {
 export function saveBestScore(score: number): void {
   try {
     localStorage.setItem(BEST_SCORE_STORAGE_KEY, String(score))
-  } catch {
-    // Ignore
+  } catch (e) {
+    console.warn("Failed to save best score", e)
   }
 }
 
@@ -119,7 +119,7 @@ export function saveGameState(state: GameState): void {
     }
 
     localStorage.setItem(GAME_STATE_STORAGE_KEY, JSON.stringify(storedState))
-  } catch {
-    // Ignore
+  } catch (e) {
+    console.warn("Failed to save game state", e)
   }
 }

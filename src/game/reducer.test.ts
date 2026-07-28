@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { BEST_SCORE_STORAGE_KEY, GAME_STATE_STORAGE_KEY } from "./constants"
+import { BEST_SCORE_STORAGE_KEY, GAME_STATE_STORAGE_KEY, MAX_HISTORY_LENGTH } from "./constants"
 import { createInitialState, gameReducer } from "./reducer"
 import { saveGameState } from "./storage"
 import type { GameState, Tile } from "./types"
@@ -78,8 +78,7 @@ describe("gameReducer", () => {
     const undone = gameReducer(moved, { type: "UNDO" })
 
     expect(moved.score).toBe(4)
-    expect(moved.bestScore).toBe(100)
-    expect(moved.history).toHaveLength(1)
+    expect(moved.bestScore).toBe(100) expect(moved.history).toHaveLength(1)
     expect(undone.tiles).toEqual(previousTiles)
     expect(undone.score).toBe(0)
     expect(undone.bestScore).toBe(100)
@@ -203,6 +202,97 @@ describe("gameReducer", () => {
     expect(initial.tiles).toHaveLength(2)
     expect(initial.score).toBe(0)
     expect(initial.history).toEqual([])
+  })
+
+  it("syncs tile ID counter with history tiles to prevent collisions after undo+reload", () => {
+    const saved = state({
+      tiles: [tile("t100", 2, 0, 0), tile("t101", 2, 0, 1), tile("t102", 4, 0, 2)],
+      score: 8,
+      history: [
+        {
+          tiles: [
+            tile("t100", 2, 0, 0),
+            tile("t101", 2, 0, 1),
+            tile("t102", 4, 0, 2),
+            tile("t103", 2, 0, 3),
+          ],
+          score: 4,
+          hasWon: false,
+          hasSeenWinOverlay: false,
+          isGameOver: false,
+        },
+      ],
+    })
+
+    const storage = new Map<string, string>([
+      [GAME_STATE_STORAGE_KEY, JSON.stringify({ ...saved, bestScore: undefined })],
+    ])
+    vi.stubGlobal("localStorage", {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: (key: string, value: string) => storage.set(key, value),
+    })
+
+    const restored = createInitialState()
+
+    // Undo to the history state — this brings back t103 onto the board
+    const undone = gameReducer(restored, { type: "UNDO" })
+    expect(undone.tiles).toHaveLength(4)
+    expect(undone.tiles.find((t) => t.id === "t103")).toBeDefined()
+
+    // Make a move (right) — t100 and t101 merge, then a new tile spawns.
+    // The new tile should have a unique ID beyond t103, not colliding.
+    mockRandomSequence([0, 0])
+    const moved = gameReducer(undone, { type: "MOVE", direction: "right" })
+
+    const tileIds = moved.tiles.map((t) => t.id)
+    const uniqueIds = new Set(tileIds)
+    expect(uniqueIds.size).toBe(tileIds.length)
+    // The newly spawned tile should have an ID beyond t103
+    const newTile = moved.tiles.find((t) => !["t100", "t101", "t102", "t103"].includes(t.id))
+    expect(newTile).toBeDefined()
+    const match = /^t(\d+)$/.exec(newTile!.id)
+    expect(match).not.toBeNull()
+    expect(Number.parseInt(match![1], 10)).toBeGreaterThan(103)
+  })
+
+  it("logs a warning when saving game state fails due to storage quota", () => {
+    vi.stubGlobal("localStorage", {
+      getItem: vi.fn(),
+      setItem: vi.fn(() => {
+        throw new Error("QuotaExceededError")
+      }),
+    })
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+
+    saveGameState(state({ tiles: [tile("t1", 2, 0, 0)] }))
+
+    expect(warnSpy).toHaveBeenCalledWith("Failed to save game state", expect.any(Error))
+  })
+
+  it("caps undo history at MAX_HISTORY_LENGTH entries", () => {
+    mockRandomSequence([0, 0])
+
+    // Fill the history up to the cap
+    const historyEntries = Array.from({ length: MAX_HISTORY_LENGTH }, (_, i) => ({
+      tiles: [tile(`t${i}`, 2, 0, 0)],
+      score: i,
+      hasWon: false,
+      hasSeenWinOverlay: false,
+      isGameOver: false,
+    }))
+
+    const current = state({
+      tiles: [tile("current", 2, 0, 0), tile("next", 2, 0, 1)],
+      history: historyEntries,
+    })
+
+    const moved = gameReducer(current, { type: "MOVE", direction: "left" })
+
+    expect(moved.history).toHaveLength(MAX_HISTORY_LENGTH)
+    // The oldest entry (score 0) was dropped
+    expect(moved.history[0].score).toBe(1)
+    // The newest entry is the snapshot of the state before the move (score 0)
+    expect(moved.history[MAX_HISTORY_LENGTH - 1].score).toBe(0)
   })
 
   it("persists state without transient animation flags", () => {
