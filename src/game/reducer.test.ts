@@ -78,7 +78,8 @@ describe("gameReducer", () => {
     const undone = gameReducer(moved, { type: "UNDO" })
 
     expect(moved.score).toBe(4)
-    expect(moved.bestScore).toBe(100) expect(moved.history).toHaveLength(1)
+    expect(moved.bestScore).toBe(100)
+    expect(moved.history).toHaveLength(1)
     expect(undone.tiles).toEqual(previousTiles)
     expect(undone.score).toBe(0)
     expect(undone.bestScore).toBe(100)

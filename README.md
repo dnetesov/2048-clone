@@ -1,4 +1,4 @@
-# Bluedot 2048
+# 2048
 
 A clone of 2048 game, built with Vite + React + TypeScript and plain CSS  no UI, state, or animation libraries.
 
@@ -60,7 +60,7 @@ src/
 
   components/
     Game.tsx            Owns reducer state, wires up controls
-    Header.tsx          Logo, score cards, New Game button
+    Header.tsx          Title, score cards, New Game button
     Board.tsx           Static grid + shadow layer + tile layer + overlays
     GridCell.tsx        Static empty cell backdrop
     Tile.tsx            Animated tiles and their matching shadow elements

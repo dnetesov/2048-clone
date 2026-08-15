@@ -62,7 +62,7 @@ export function Game() {
         </div>
       </main>
 
-      <footer className="footer">© 2026 Bluedot. All rights reserved.</footer>
+      <footer className="footer">© 2026</footer>
     </div>
   );
 }

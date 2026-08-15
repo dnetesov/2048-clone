@@ -1,4 +1,3 @@
-import Logo from "../../public/logo.svg?react"
 import { Button } from "./Button"
 import { ScoreCard } from "./ScoreCard"
 
@@ -11,7 +10,7 @@ type HeaderProps = {
 export function Header({ score, bestScore, onNewGame }: HeaderProps) {
   return (
     <header className="header">
-      <Logo className="logo" role="img" aria-label="Bluedot 2048" />
+      <h1 className="app-title">2048</h1>
 
       <div className="header__scores">
         <ScoreCard dark label="Score" value={score} />
